@@ -17,9 +17,12 @@ public protocol ReusableCellViewProtocol: class {
 	static var reusableViewType: AnyObject.Type { get }
 	static var reusableViewClass: AnyClass { get }
 	static var reusableViewIdentifier: String { get }
-	static var reusableViewSource: ReusableViewSource { get }
+    static var reusableViewSource: ReusableViewSource { get }
 
 	static func registerReusableView(inTable table: UITableView?, as type: ReusableViewRegistrationType)
+    static func registerReusableView(inTable table: UITableView?,
+                                     as type: ReusableViewRegistrationType,
+                                     from source: ReusableViewSource)
 	static func registerReusableView(inCollection collection: UICollectionView?, as type: ReusableViewRegistrationType)
 }
 
@@ -70,6 +73,36 @@ public extension ReusableCellViewProtocol {
 			}
 		}
 	}
+
+    static func registerReusableView(inTable table: UITableView?,
+                                     as type: ReusableViewRegistrationType,
+                                     from source: ReusableViewSource) {
+        switch source {
+        case .fromStoryboard:
+            if type.isHeaderFooter {
+                fatalError("Cannot load header/footer from storyboard. Use another source (xib/class) instead.")
+            }
+            break
+
+        case .fromXib(let name, let bundle):
+            let srcBundle = (bundle ?? Bundle.init(for: reusableViewClass))
+            let srcNib = UINib(nibName: (name ?? reusableViewIdentifier), bundle: srcBundle)
+
+            if type == .cell {
+                table?.register(srcNib, forCellReuseIdentifier: reusableViewIdentifier)
+            } else {
+                table?.register(srcNib, forHeaderFooterViewReuseIdentifier: reusableViewIdentifier)
+            }
+
+        case .fromClass:
+
+            if type == .cell {
+                table?.register(reusableViewClass, forCellReuseIdentifier: reusableViewIdentifier)
+            } else {
+                table?.register(reusableViewClass, forHeaderFooterViewReuseIdentifier: reusableViewIdentifier)
+            }
+        }
+    }
 
 	static func registerReusableView(inCollection collection: UICollectionView?, as type: ReusableViewRegistrationType) {
 		switch reusableViewSource {
@@ -127,7 +160,7 @@ extension UITableViewCell : ReusableCellViewProtocol {
 }
 
 extension UICollectionReusableView: ReusableCellViewProtocol {
-	public static var reusableViewClass: AnyClass {
-		return self
-	}
+    public static var reusableViewClass: AnyClass {
+        return self
+    }
 }
