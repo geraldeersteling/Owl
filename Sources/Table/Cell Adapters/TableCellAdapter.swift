@@ -12,28 +12,6 @@
 
 import UIKit
 
-public struct ReusableCellConfiguration {
-    var type: AnyObject.Type?
-    var reusableClass: AnyClass?
-    var source: ReusableViewSource
-    var identifier: String?
-
-    static var defaultConfig = ReusableCellConfiguration(type: nil,
-                                                         reusableClass: nil,
-                                                         source: .fromStoryboard,
-                                                         identifier: nil)
-
-    public init(type: AnyObject.Type? = nil,
-                reusableClass: AnyClass? = nil,
-                source: ReusableViewSource = .fromStoryboard,
-                identifier: String? = nil) {
-        self.type = type
-        self.reusableClass = reusableClass
-        self.source = source
-        self.identifier = identifier
-    }
-}
-
 open class TableCellAdapter<Model: ElementRepresentable, Cell: ReusableCellViewProtocol>: TableCellAdapterProtocol {
 
 	// MARK: - TableAdapterProtocol Conformance -
@@ -46,14 +24,9 @@ open class TableCellAdapter<Model: ElementRepresentable, Cell: ReusableCellViewP
 	/// Events you can observe from the adapter.
 	public let events = EventsSubscriber()
 
-    // MARK: - Cell configuration
-
-    public let reusableCellConfiguration: ReusableCellConfiguration
-
 	// MARK: - Initialization -
 	
-    public init(_ configuration: ((TableCellAdapter) -> ())? = nil, cellConfiguration: ReusableCellConfiguration? = nil) {
-        reusableCellConfiguration = cellConfiguration ?? ReusableCellConfiguration.defaultConfig
+	public init(_ configuration: ((TableCellAdapter) -> ())? = nil) {
 		configuration?(self)
 	}
 
@@ -73,8 +46,7 @@ open class TableCellAdapter<Model: ElementRepresentable, Cell: ReusableCellViewP
 		guard director.cellReuseIDs.contains(id) == false else {
 			return false
 		}
-		//Cell.registerReusableView(inTable: director.table, as: .cell)
-        Cell.registerReusableView(inTable: director.table, as: .cell, from: reusableCellConfiguration.source)
+		Cell.registerReusableView(inTable: director.table, as: .cell)
 		director.cellReuseIDs.insert(id)
 		return true
 	}
